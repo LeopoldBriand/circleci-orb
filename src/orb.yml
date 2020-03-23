@@ -241,12 +241,17 @@ commands:
         description: Overrides the default NPM or Yarn command
         type: string
         default: ''
+      no-output-timeout:
+        description: Elapsed time the command can run without output. The string is a decimal with unit suffix, such as “20m”, “1.25h”, “5s” (default 10 minutes)
+        type: string
+        default: "10m"
     steps:
       - setup:
           install-command: << parameters.install-command >>
           post-install: << parameters.post-install >>
           yarn: << parameters.yarn >>
           cache-key: << parameters.cache-key >>
+          no_output_timeout: << parameters.no_output_timeout >>
           build: << parameters.build >>
           working_directory: << parameters.working_directory >>
       - unless:
@@ -452,30 +457,30 @@ jobs:
             - unless:
                 condition: << parameters.attach-workspace >>
                 steps:
-                - checkout
-                - steps: << parameters.post-checkout >>
-                - when:
-                    condition: << parameters.build >>
-                    steps:
-                      - install:
-                          yarn: << parameters.yarn >>
-                          install-command: << parameters.install-command >>
-                          post-install: << parameters.post-install >>
-                          cache-key: << parameters.cache-key >>
-                          no-workspace: << parameters.no-workspace >>
-                          build:
-                            - run: << parameters.build >>
-                          working_directory: << parameters.working_directory >>
-                - unless:
-                    condition: <<parameters.build>>
-                    steps:
-                      - install:
-                          cache-key: << parameters.cache-key >>
-                          yarn: << parameters.yarn >>
-                          install-command: << parameters.install-command >>
-                          post-install: << parameters.post-install >>
-                          no-workspace: << parameters.no-workspace >>
-                          working_directory: << parameters.working_directory >>
+                  - checkout
+                  - steps: << parameters.post-checkout >>
+                  - when:
+                      condition: << parameters.build >>
+                      steps:
+                        - install:
+                            yarn: << parameters.yarn >>
+                            install-command: << parameters.install-command >>
+                            post-install: << parameters.post-install >>
+                            cache-key: << parameters.cache-key >>
+                            no-workspace: << parameters.no-workspace >>
+                            build:
+                              - run: << parameters.build >>
+                            working_directory: << parameters.working_directory >>
+                  - unless:
+                      condition: <<parameters.build>>
+                      steps:
+                        - install:
+                            cache-key: << parameters.cache-key >>
+                            yarn: << parameters.yarn >>
+                            install-command: << parameters.install-command >>
+                            post-install: << parameters.post-install >>
+                            no-workspace: << parameters.no-workspace >>
+                            working_directory: << parameters.working_directory >>
 
       - when:
           condition: <<parameters.start>>
@@ -554,6 +559,10 @@ jobs:
         default: ''
         description: |
           Custom build command to run after install to build the web application or web server.
+      no-output-timeout:
+        description: Elapsed time the command can run without output. The string is a decimal with unit suffix, such as “20m”, “1.25h”, “5s” (default 10 minutes)
+        type: string
+        default: "10m"
       cache-key:
         description: Npm cache key
         type: string
@@ -596,6 +605,7 @@ jobs:
                   - run:
                       name: 'Build'
                       command: << parameters.build >>
+                      no_output_timeout: << parameters.no_output_timeout >>
                 working_directory: << parameters.working_directory >>
                 cache-key: << parameters.cache-key >>
       - unless:
